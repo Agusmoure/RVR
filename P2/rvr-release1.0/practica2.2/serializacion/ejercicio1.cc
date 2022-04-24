@@ -14,7 +14,7 @@ class Jugador: public Serializable
 public:
     Jugador(const char * n, int16_t x, int16_t y):_x(x),_y(y)
     {
-        strncpy(_name, n, 80);
+        strncpy(_name, n, MAX_NAME);
     };
 
     virtual ~Jugador(){};
@@ -30,13 +30,14 @@ public:
         return 0;
     }
     const char* getName(){return _name;}
-    void setName(const char * n){ strncpy(_name, n, 80);}
+    void setName(const char * n){ strncpy(_name, n, MAX_NAME);}
     int getX(){return _x;}
     int getY(){return _y;}
     void setX(int x){_x=x;}
     void setX(int y){ _y=y;}
 private:
-    char _name[80];
+    static const size_t MAX_NAME=20;
+    char _name[MAX_NAME];
 
     int16_t _x;
     int16_t _y;
