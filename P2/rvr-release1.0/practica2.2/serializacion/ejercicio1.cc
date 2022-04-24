@@ -2,7 +2,7 @@
 
 #include <iostream>
 #include <string>
-
+#include <fstream>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -21,7 +21,14 @@ public:
 
     void to_bin()
     {
-        //
+        int32_t total=MAX_NAME*sizeof(char)+2*sizeof(int16_t);
+        alloc_data(total);
+        char *tmp=_data;
+        memcpy(tmp,_name,MAX_NAME);
+        tmp += MAX_NAME * sizeof(char);
+        memcpy(tmp,&_x,sizeof(_x));
+        tmp+=sizeof(_x);
+        memcpy(tmp,&_y,sizeof(_y));
     }
 
     int from_bin(char * data)
@@ -34,7 +41,7 @@ public:
     int getX(){return _x;}
     int getY(){return _y;}
     void setX(int x){_x=x;}
-    void setX(int y){ _y=y;}
+    void setY(int y){ _y=y;}
 private:
     static const size_t MAX_NAME=20;
     char _name[MAX_NAME];
@@ -49,7 +56,12 @@ int main(int argc, char **argv)
     Jugador one_w("Player_ONE", 123, 987);
 
     // 1. Serializar el objeto one_w
+    one_w.to_bin();
     // 2. Escribir la serialización en un fichero
+    std::fstream fs;
+    fs.open("PLAYER_ONE",std::fstream::out);
+    fs.write(one_w.data(),one_w.size());
+    fs.close();
     // 3. Leer el fichero
     // 4. "Deserializar" en one_r
     // 5. Mostrar el contenido de one_r
