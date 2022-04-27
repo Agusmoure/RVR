@@ -33,7 +33,17 @@ public:
 
     int from_bin(char * data)
     {
-        //
+        char * tmp = data;
+
+        memcpy(_name, tmp, MAX_NAME);
+        tmp += MAX_NAME * sizeof(char);
+
+        memcpy(&_x, tmp, sizeof(_x));
+        tmp += sizeof(_x);
+
+        memcpy(&_y, tmp, sizeof(_y));
+        tmp += sizeof(_y);
+
         return 0;
     }
     const char* getName(){return _name;}
@@ -53,7 +63,7 @@ private:
 int main(int argc, char **argv)
 {
     Jugador one_r("", 0, 0);
-    Jugador one_w("Player_ONE", 123, 987);
+    Jugador one_w("Player_ONE", 12, 98);
 
     // 1. Serializar el objeto one_w
     one_w.to_bin();
@@ -63,8 +73,20 @@ int main(int argc, char **argv)
     fs.write(one_w.data(),one_w.size());
     fs.close();
     // 3. Leer el fichero
+    char data[one_w.size()];
+
+    fs.open("Player_ONE", std::fstream::in);
+
+    fs.read(data, one_w.size());
+
+    fs.close();
     // 4. "Deserializar" en one_r
+    one_r.from_bin(data);
+
     // 5. Mostrar el contenido de one_r
+    std::cout << "Name: "<< one_r.getName() << std::endl;
+    std::cout << "X: "<< one_r.getX() << std::endl;
+    std::cout << "Y: "<< one_r.getY() << std::endl;
 
     return 0;
 }
