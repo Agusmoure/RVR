@@ -27,7 +27,7 @@
 class ChatMessage: public Serializable
 {
 public:
-    static const size_t MESSAGE_SIZE = sizeof(char) * 88 + sizeof(uint8_t);
+    static const size_t MESSAGE_SIZE = sizeof(char) * (88)/*Suma de NICK_SIZE + TEXT_SIZE*/ + sizeof(uint8_t);
 
     enum MessageType
     {
@@ -38,16 +38,19 @@ public:
 
     ChatMessage(){};
 
-    ChatMessage(const std::string& n, const std::string& m):nick(n),message(m){};
+    ChatMessage(const std::string& n, const std::string& m):_nick(n),_message(m){};
 
     void to_bin();
 
     int from_bin(char * bobj);
 
-    uint8_t type;
+    uint8_t _type;
 
-    std::string nick;
-    std::string message;
+    std::string _nick;
+    std::string _message;
+    private:
+    const int TEXT_SIZE=80;
+    const int NICK_SIZE=8;
 };
 
 // -----------------------------------------------------------------------------
@@ -95,10 +98,10 @@ public:
     /**
      * @param s dirección del servidor
      * @param p puerto del servidor
-     * @param n nick del usuario
+     * @param n _nick del usuario
      */
     ChatClient(const char * s, const char * p, const char * n):socket(s, p),
-        nick(n){};
+        _nick(n){};
 
     /**
      *  Envía el mensaje de login al servidor
@@ -132,6 +135,6 @@ private:
     /**
      * Nick del usuario
      */
-    std::string nick;
+    std::string _nick;
 };
 

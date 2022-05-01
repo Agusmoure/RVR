@@ -24,6 +24,7 @@ class Serializable;
  *  realizarse con el operador == de los tipos básicos asociados.
  */
 bool operator== (const Socket &s1, const Socket &s2);
+bool operator!= (const Socket &s1, const Socket &s2);
 
 /**
  *  Imprime la dirección y puerto en número con el formato:"dirección_ip:puerto"
