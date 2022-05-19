@@ -1,4 +1,4 @@
-#include "Card.h"
+#include "Message.h"
 Message::Message(const std::string&n, Card& c) {
     _nick=n;
     _color=c.getColor();
