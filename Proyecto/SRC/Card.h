@@ -1,3 +1,8 @@
+#include <string>
+#include <unistd.h>
+#include <string.h>
+#include <vector>
+#include <memory>
 class Card
 {
 public:
