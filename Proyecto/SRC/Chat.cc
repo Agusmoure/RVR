@@ -143,22 +143,32 @@ void ChatServer::do_messages()
         }
         case ChatMessage::START:
         {
-            started = true;
-            for (auto it = clients.begin(); it != clients.end(); ++it)
+            if (clients.size() >= 2)
             {
-                ChatMessage msg = ChatMessage("server", "aaa");
-                msg._type = ChatMessage::START;
-                socket.send(msg, **it);
+
+                started = true;
+                for (auto it = clients.begin(); it != clients.end(); ++it)
+                {
+                    ChatMessage msg = ChatMessage("server", "aaa");
+                    msg._type = ChatMessage::START;
+                    socket.send(msg, **it);
+                }
+                host = std::move(cliente);
+                std::cout << "el host es: " << cmsg._nick << std::endl;
+                ChatMessage msg = ChatMessage("server", "elija una palabra");
+                msg._type = ChatMessage::MESSAGE;
+                socket.send(msg, *host);
+                std::cout << "aqui\n";
+                if (*host == *clients[0])
+                {
+                    turn = 1;
+                }
             }
-            host = std::move(cliente);
-            std::cout << "el host es: " << cmsg._nick << std::endl;
-            ChatMessage msg = ChatMessage("server", "elija una palabra");
-            msg._type = ChatMessage::MESSAGE;
-            socket.send(msg, *host);
-            std::cout << "aqui\n";
-            if (*host == *clients[0])
+            else
             {
-                turn = 1;
+                ChatMessage msg = ChatMessage("server", "espera a que haya más jugadores");
+                msg._type = ChatMessage::MESSAGE;
+                socket.send(msg, *cliente);
             }
             break;
         }
@@ -242,7 +252,7 @@ void ChatServer::guessLetter(char c)
         if (word[i] == c)
         {
             auto it = std::find(correctLetters.begin(), correctLetters.end(), c);
-            if (it == correctLetters.end())//Decir una letra correcta ya dicha cuenta como pasar sino mira cuantas son correctas
+            if (it == correctLetters.end()) //Decir una letra correcta ya dicha cuenta como pasar sino mira cuantas son correctas
             {
                 for (size_t i = 0; i < word.size(); i++)
                 {
@@ -253,7 +263,7 @@ void ChatServer::guessLetter(char c)
                     }
                 }
                 correctLetters.push_back(c);
-            } 
+            }
 
             findone = true;
         }
@@ -288,7 +298,7 @@ void ChatClient::logout()
 }
 void ChatClient::input_thread()
 {
-signal(SIGINT,SIG_IGN);
+    signal(SIGINT, SIG_IGN);
     while (!finish)
     {
         if (playing)
@@ -300,12 +310,12 @@ signal(SIGINT,SIG_IGN);
             std::cin >> c;
             ChatMessage em(_nick, c);
             em._type = ChatMessage::GUESS;
-            if(!finish)//por si ha cambiado mientras esperaba input
-            socket.send(em, socket);
+            if (!finish) //por si ha cambiado mientras esperaba input
+                socket.send(em, socket);
         }
         else
         {
-        
+
             // Leer stdin con std::getline
             std::string msg;
             std::getline(std::cin, msg);
@@ -315,12 +325,13 @@ signal(SIGINT,SIG_IGN);
                 em._type = ChatMessage::START;
             else
                 em._type = ChatMessage::MESSAGE;
-                if(!playing)//por si ha cambiado mientras esperaba input
-            socket.send(em, socket);
+            if (!playing) //por si ha cambiado mientras esperaba input
+                socket.send(em, socket);
         }
     }
-    if(finish) logout();
-    std::cout<<"Termina input\n";
+    if (finish)
+        logout();
+    std::cout << "Termina input\n";
 }
 
 void ChatClient::net_thread()
@@ -372,7 +383,7 @@ void ChatClient::net_thread()
             std::cout << em._nick << ": " << em._message << std::endl;
         }
     }
-    std::cout<<"Termina net\n";
+    std::cout << "Termina net\n";
 }
 void ChatClient::printMan(int fails)
 {
