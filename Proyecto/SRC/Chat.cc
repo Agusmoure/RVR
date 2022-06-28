@@ -83,7 +83,13 @@ void ChatServer::do_messages()
         {
             if (started && !selected && *cliente == *host) //Selecciona la palabra
             {
-                word = cmsg._message;
+                cmsg._message.erase(std::remove_if(cmsg._message.begin(), cmsg._message.end(), isspace), cmsg._message.end());//Elimina espacios
+                //Pasa a minúscula toda la palabra
+                for (size_t i = 0; i < cmsg._message.size(); i++)
+                {
+                    word+=tolower(cmsg._message[i]);
+                }
+                
                 selected = true;
                 std::cout << cmsg._nick << " ha elegido la palabra " << word << std::endl;
                 for (auto it = clients.begin(); it != clients.end(); ++it)
@@ -96,6 +102,7 @@ void ChatServer::do_messages()
                         socket.send(msg, **it);
                         //enviar la palabra
                         cmsg._type = ChatMessage::WORDSELECTED;
+                        cmsg._message=word;
                         socket.send(cmsg, **it);
                         if (*clients[turn] == **it) //Le envia a cada cliente si es su turno o no
                         {
@@ -196,6 +203,7 @@ void ChatServer::do_messages()
                         {
 
                             std::cout << cmsg._nick << " ha enviado una letra" << std::endl;
+                            cmsg._message[0]=std::tolower(cmsg._message[0]);
                             socket.send(cmsg, **it);
                         }
                         if (*clients[turn] == **it) //Le envia a cada cliente si es su turno o no
