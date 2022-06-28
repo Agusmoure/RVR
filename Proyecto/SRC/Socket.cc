@@ -11,7 +11,7 @@ Socket::Socket(const char * address, const char * port):sd(-1)
     memset(&hints,0,sizeof(hints));
     hints.ai_family=AF_INET;
     hints.ai_socktype=SOCK_DGRAM;
-    hints.ai_protocol=17;
+    hints.ai_protocol=0;
     int rc= getaddrinfo(address, port,&hints,&res);
     if(rc!=0){
         //Si se produce fallo muestra cual es

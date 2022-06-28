@@ -140,7 +140,6 @@ public:
      *  en STDOUT
      */
     void net_thread();
-
 private:
     void printMan(int fails);
     void print(int fails);

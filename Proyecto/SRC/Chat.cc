@@ -1,5 +1,9 @@
 #include "Chat.h"
 #include <algorithm>
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <unistd.h>
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
 
@@ -282,9 +286,9 @@ void ChatClient::logout()
 
     socket.send(em, socket);
 }
-
 void ChatClient::input_thread()
 {
+signal(SIGINT,SIG_IGN);
     while (!finish)
     {
         if (playing)
@@ -296,10 +300,12 @@ void ChatClient::input_thread()
             std::cin >> c;
             ChatMessage em(_nick, c);
             em._type = ChatMessage::GUESS;
+            if(!finish)//por si ha cambiado mientras esperaba input
             socket.send(em, socket);
         }
         else
         {
+        
             // Leer stdin con std::getline
             std::string msg;
             std::getline(std::cin, msg);
@@ -309,9 +315,12 @@ void ChatClient::input_thread()
                 em._type = ChatMessage::START;
             else
                 em._type = ChatMessage::MESSAGE;
+                if(!playing)//por si ha cambiado mientras esperaba input
             socket.send(em, socket);
         }
     }
+    if(finish) logout();
+    std::cout<<"Termina input\n";
 }
 
 void ChatClient::net_thread()
@@ -361,9 +370,9 @@ void ChatClient::net_thread()
             finish = true;
             std::cout << "\x1B[2J\x1B[H";
             std::cout << em._nick << ": " << em._message << std::endl;
-            logout();
         }
     }
+    std::cout<<"Termina net\n";
 }
 void ChatClient::printMan(int fails)
 {

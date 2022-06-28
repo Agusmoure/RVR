@@ -2,9 +2,12 @@
 ## Introducción
 Aquí se encuentra el proyecto de la asignatura de Redes y videojuegos en red (RVR), realizado por Agustín Moure.
 ## Propuesta
-El proyecto final de RVR consiste en replicar el famoso juego del UNO, un juego de cartas en el cual gana el primer jugador en quedarse sin cartas.
-![Screenshot](./AssetsREADME/UNO.jpg)
+El proyecto final de redes se basará en una adaptaciçon del famoso juego del ahorcado.
+![screenshot](./AssetsREADME/ahorcado.jpg)
 
-Para ello se usará la consola, para ello se usará el protocolo TCP ya que al ser un juego de cartas debemos asegurarnos de que la información se envía correctamente.
-![Screenshot](./AssetsREADME/TCP.png)
- 
+Se tratará de una versión colaborativa en la que o todos (menos quien elige la palabra) juegan para ganar,se juega por turnos en orden de entrada en la sala saltandosé siempre al que ha elegido la palabra.
+
+Lo ideal sería realizarlo con un protocolo TCP, sin embargo se va a realizar con protocolo UDP.
+
+![Screenshot](AssetsREADME/TCPvsUDP.jpeg)
+
