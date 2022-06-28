@@ -141,8 +141,13 @@ public:
      */
     void net_thread();
 private:
+     /** Pinta el ahorcado en funcion de 
+      * @param fails numero de fallos*/
     void printMan(int fails);
+    /** Pinta tanto el ahorcado como las letras erroneas y las acertadas 
+     * además de las posiciones que restan por acertar*/
     void print(int fails);
+    /** Comprueba si la letra se encuentra dentro de la palabra y aumenta el contador de fallos*/
     void guessLetter(char c);
     /**
      * Socket para comunicar con el servidor

@@ -15,16 +15,11 @@ void ChatMessage::to_bin()
 
     //Serializar los campos _type, _nick y _message en el buffer _data
     char *tmp = _data;
-
     memcpy(tmp, &_type, sizeof(uint8_t));
     tmp += sizeof(uint8_t);
-
-    // _nick[NICK_SIZE] = '\0';
     memcpy(tmp, _nick.c_str(), sizeof(char) * NICK_SIZE);
     tmp += sizeof(char) * NICK_SIZE;
-    // _message[TEXT_SIZE] = '\0';
     memcpy(tmp, _message.c_str(), TEXT_SIZE * sizeof(char));
-    // tmp += TEXT_SIZE *sizeof(char);
 }
 
 int ChatMessage::from_bin(char *bobj)
@@ -32,7 +27,6 @@ int ChatMessage::from_bin(char *bobj)
     alloc_data(MESSAGE_SIZE);
 
     memcpy(static_cast<void *>(_data), bobj, MESSAGE_SIZE);
-
     //Reconstruir la clase usando el buffer _data
     _size = MESSAGE_SIZE;
 
@@ -41,13 +35,8 @@ int ChatMessage::from_bin(char *bobj)
     memcpy(&_type, tmp, sizeof(uint8_t));
     tmp += sizeof(uint8_t);
     _nick = tmp;
-    // memcpy(&_nick[0], tmp, sizeof(char) * NICK_SIZE);
     tmp += sizeof(char) * NICK_SIZE;
-    // _nick[NICK_SIZE] = '\0';
     _message = tmp;
-    // memcpy(&_message[0], tmp, sizeof(char) * TEXT_SIZE);
-    // tmp += sizeof(char) * TEXT_SIZE;
-    // _message[TEXT_SIZE] = '\0';
 
     return 0;
 }
@@ -67,12 +56,12 @@ void ChatServer::do_messages()
         ChatMessage cmsg;
         Socket *outSocket = &socket;
 
-        //Recibir Mensajes en y en función del tipo de mensaje
+        //Recibir Mensajes y en función del tipo de mensaje
         socket.recv(cmsg, outSocket);
         std::unique_ptr<Socket> cliente(outSocket);
         switch (cmsg._type)
         {
-            // - LOGIN: Añadir al vector clients
+            // - LOGIN: Añadir al vector clients a no ser que la partida ya haya empezado
         case ChatMessage::LOGIN /*LOGIN*/:
         {
             if (!started)
@@ -92,7 +81,7 @@ void ChatServer::do_messages()
             // - MESSAGE: Reenviar el mensaje a todos los clientes (menos el emisor) si el juego no ha empezado
         case ChatMessage::MESSAGE:
         {
-            if (started && !selected && *cliente == *host)
+            if (started && !selected && *cliente == *host) //Selecciona la palabra
             {
                 word = cmsg._message;
                 selected = true;
@@ -108,10 +97,26 @@ void ChatServer::do_messages()
                         //enviar la palabra
                         cmsg._type = ChatMessage::WORDSELECTED;
                         socket.send(cmsg, **it);
+                        if (*clients[turn] == **it) //Le envia a cada cliente si es su turno o no
+                        {
+                            ChatMessage msg("Server", "Es tu turno");
+                            msg._type = ChatMessage::MESSAGE;
+                            socket.send(msg, **it);
+                        }
+                        else
+                        {
+
+                            if (!(**it == *host))
+                            {
+                                ChatMessage msg("Server", "No es tu turno");
+                                msg._type = ChatMessage::MESSAGE;
+                                socket.send(msg, **it);
+                            }
+                        }
                     }
                 }
             }
-            else
+            else //Reenvio de mensaje
                 for (auto it = clients.begin(); it != clients.end(); ++it)
                 {
 
@@ -141,9 +146,9 @@ void ChatServer::do_messages()
                 return;
             break;
         }
-        case ChatMessage::START:
+        case ChatMessage::START: //Determina el host y avisa al resto
         {
-            if (clients.size() >= 2)
+            if (clients.size() >= 2) //Si hay más de un cliente
             {
 
                 started = true;
@@ -159,12 +164,12 @@ void ChatServer::do_messages()
                 msg._type = ChatMessage::MESSAGE;
                 socket.send(msg, *host);
                 std::cout << "aqui\n";
-                if (*host == *clients[0])
+                if (*host == *clients[0]) //si el turno correspondia al host se cambia
                 {
                     turn = 1;
                 }
             }
-            else
+            else //Si solo hay un cliente le pide que espere a que se unan más
             {
                 ChatMessage msg = ChatMessage("server", "espera a que haya más jugadores");
                 msg._type = ChatMessage::MESSAGE;
@@ -174,12 +179,12 @@ void ChatServer::do_messages()
         }
         case ChatMessage::GUESS:
         {
-            if (*cliente == *clients.at(turn))
+            if (*cliente == *clients.at(turn)) //Si le toca a este cliente
             {
                 guessLetter(cmsg._message[0]);
                 if (!finish())
                 {
-                    //Le toca a ese jugador
+                    //Calculamos el turno del siguiente
                     turn = ((turn + 1) % clients.size());
                     if (*clients[turn] == *host)
                     { //si el siguiente cliente es el host se lo salta
@@ -187,13 +192,13 @@ void ChatServer::do_messages()
                     }
                     for (auto it = clients.begin(); it != clients.end(); ++it)
                     {
-                        if (!(**it == *host))
+                        if (!(**it == *host)) //Envia a todos los clientes menos al host la letra que se ha intentado
                         {
 
                             std::cout << cmsg._nick << " ha enviado una letra" << std::endl;
                             socket.send(cmsg, **it);
                         }
-                        if (*clients[turn] == **it)
+                        if (*clients[turn] == **it) //Le envia a cada cliente si es su turno o no
                         {
                             ChatMessage msg("Server", "Es tu turno");
                             msg._type = ChatMessage::MESSAGE;
@@ -201,6 +206,7 @@ void ChatServer::do_messages()
                         }
                         else
                         {
+
                             if (!(**it == *host))
                             {
                                 ChatMessage msg("Server", "No es tu turno");
@@ -210,7 +216,7 @@ void ChatServer::do_messages()
                         }
                     }
                 }
-                else
+                else //si se ha terminado la partida
                 {
                     std::cout << "ENDGAME\n";
                     std::string txt = fails >= 7 ? "Losiento habeis perdido la palabra era: " + word : "Enhorabuena habeis adivinado la palabra: " + word;
@@ -225,7 +231,7 @@ void ChatServer::do_messages()
                             socket.send(msg2, **it);
                 }
             }
-            else
+            else //Si no es el turno de este cliente
             {
                 ChatMessage msg("Server", "Espera tu turno");
                 msg._type = ChatMessage::MESSAGE;
@@ -325,7 +331,7 @@ void ChatClient::input_thread()
                 em._type = ChatMessage::START;
             else
                 em._type = ChatMessage::MESSAGE;
-            if (!playing) //por si ha cambiado mientras esperaba input
+            if (!playing && !finish) //por si ha cambiado mientras esperaba input
                 socket.send(em, socket);
         }
     }
@@ -342,9 +348,9 @@ void ChatClient::net_thread()
         ChatMessage em;
 
         socket.recv(em);
-
-        //Mostrar en pantalla el mensaje de la forma "_nick: mensaje"
-        if (em._type == ChatMessage::MESSAGE || em._type == ChatMessage::REJECTED)
+        switch (em._type)
+        {
+        case ChatMessage::MESSAGE:
         {
             if (!playing)
                 std::cout << em._nick << ": " << em._message << std::endl;
@@ -353,14 +359,16 @@ void ChatClient::net_thread()
                 if (em._nick == "Server")
                     std::cout << em._message << std::endl;
             }
+            break;
         }
-        if (em._type == ChatMessage::START)
+        case ChatMessage::START:
         {
             std::cout << em._nick << ": "
                       << "ha empezado la partida" << std::endl;
             started = true;
+            break;
         }
-        if (em._type == ChatMessage::WORDSELECTED)
+        case ChatMessage::WORDSELECTED:
         {
             word = em._message;
             playing = true;
@@ -369,18 +377,30 @@ void ChatClient::net_thread()
             {
                 status.push_back('-');
             }
+            break;
         }
-        if (em._type == ChatMessage::GUESS)
+        case ChatMessage::GUESS:
         {
             guessLetter(em._message[0]);
             std::cout << "\x1B[2J\x1B[H";
             print(fails);
+            break;
         }
-        if (em._type == ChatMessage::FINISH)
+        case ChatMessage::FINISH:
         {
             finish = true;
             std::cout << "\x1B[2J\x1B[H";
             std::cout << em._nick << ": " << em._message << std::endl;
+            break;
+        }
+        case ChatMessage::REJECTED:
+        {
+            std::cout << em._nick << ": " << em._message << std::endl;
+            finish = true;
+            break;
+        }
+        default:
+            break;
         }
     }
     std::cout << "Termina net\n";
